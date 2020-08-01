@@ -13,7 +13,7 @@ class Res50Unet():
         """
         """
         self.ResNet50_2D = ResNet50_2D
-        self.model = None
+        self.net = None
     
     def load_weights(self):
       """
@@ -21,7 +21,7 @@ class Res50Unet():
 
       """    
       weights = self.ResNet50_2D.weights
-      this_weights = self.model.weights
+      this_weights = self.net.weights
       non_expandable = ['bn', 'bias', 'relu', 'pad', 'pool']
           
       for layer in self.ResNet50_2D.layers:
@@ -32,7 +32,7 @@ class Res50Unet():
           else:
             exp_weights.append(weight.numpy())
 
-        self.model.get_layer(layer.name).set_weights(exp_weights)
+        self.net.get_layer(layer.name).set_weights(exp_weights)
                           
 
     def create_model(self):
@@ -438,7 +438,7 @@ class Res50Unet():
         x = tf.keras.layers.Add(name='conv5_block3_add')([x, x_skip])
         x = tf.keras.layers.Activation(activation='linear').from_config(self.ResNet50_2D.get_layer('conv5_block3_out').get_config())(x)
         
-        self.model = tf.keras.Model(inputs=inputs, outputs=x, name="test_model")  
+        self.net = tf.keras.Model(inputs=inputs, outputs=x, name="test_model")  
 
 
 
@@ -451,7 +451,7 @@ def main():
     model.create_model()
     model.load_weights()
     
-    model.model.summary()
+    model.net.summary()
     
     #tf.keras.utils.plot_model(decoder, show_shapes=True)
 
