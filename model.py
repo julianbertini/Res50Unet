@@ -445,22 +445,16 @@ class Res50Unet():
 def main():
 
     decoder = tf.keras.applications.ResNet50(
-        include_top=False, input_shape=[128, 128, 3])
+        include_top=False, weights='imagenet', input_shape=[128, 128, 3])
 
     model = Res50Unet("test", decoder)
     model.create_model()
     model.load_weights()
     
     model.net.summary()
-    
     #tf.keras.utils.plot_model(decoder, show_shapes=True)
 
-    # Copy weights from functional_model to subclassed_model.
 
-
-    #for layer in model.model.layers:
-    #    print(layer.get_config())
-    #    print()
 
 
 if __name__ == "__main__":
