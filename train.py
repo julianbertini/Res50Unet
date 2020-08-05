@@ -55,9 +55,9 @@ class GeneralizedDiceLoss(tf.keras.losses.Loss):
         output_shape = tf.concat(
             [input_shape, tf.reshape(num_classes_tf, (1,))], 0)
 
-        if num_classes == 1:
-            # need a sparse representation?
-            return tf.reshape(ground_truth, output_shape)
+        #if num_classes == 1:
+        #    # need a sparse representation?
+        #    return tf.reshape(ground_truth, output_shape)
 
         # squeeze the spatial shape
         ground_truth = tf.reshape(ground_truth, (-1,))
@@ -95,7 +95,6 @@ class GeneralizedDiceLoss(tf.keras.losses.Loss):
             ground_truth = ground_truth[..., -1]
         one_hot = self.labels_to_one_hot(
             ground_truth, num_classes=tf.shape(prediction)[-1])
-
         if weight_map is not None:
             num_classes = prediction.shape[1].value
             weight_map_nclasses = tf.tile(
@@ -173,7 +172,7 @@ def main():
   val_img_ds = dataset.list_files(str(val_img_dir/"*"))
 
     # Takes in the imgs paths and does all data preprocesesing, returning shuffled batches ready for training
-  train_dataset = dp.prepare_for_training(train_img_ds, cache=True)
+  train_dataset = dp.prepare_for_training(train_img_ds, cache='/home/jbertini/scratch-midway2/Python/Res50Unet/model_cache')
   val_dataset = dp.prepare_for_testing(val_img_ds, purpose="val")
     # Setup training
 
@@ -186,12 +185,11 @@ def main():
 
   resnet = tf.keras.applications.ResNet50(include_top=False, weights='imagenet', input_shape=[128, 128, 3])
   model = Res50Unet(resnet)
-  model.create_model([24, 128, 128, 3])
+  model.create_model(IMG_PATCH_SIZE)
 
   model.net.compile(optimizer=tf.keras.optimizers.Adam(lr=1e-3),
           loss=GeneralizedDiceLoss(),
-          metrics=[DiceScore()],
-          run_eagerly=True)
+          metrics=[DiceScore()])
 
   model_history = model.net.fit(train_dataset,
                   epochs=EPOCHS,
@@ -201,7 +199,7 @@ def main():
                   validation_freq=1)
 
 
-  tf.saved_model.save(model, str(os.path.basename(__file__)))
+  tf.saved_model.save(model.net, str(os.path.basename(__file__)))
 
   loss = model_history.history['loss']
   val_loss = model_history.history['val_loss']

@@ -82,8 +82,6 @@ class Res50Unet():
         x = tf.keras.layers.Conv3D(name=name+'_conv',
                                    kernel_size=(1,1,1),
                                    filters=nfeatures)(x)
-        x = tf.nn.softmax(x) 
-        
         return x
     
     def decoder(self, x, x_skip1, x_skip2, x_skip3, name='decoder'):
