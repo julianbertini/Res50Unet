@@ -6,6 +6,9 @@ import pathlib
 import nibabel as nib
 from viz import Visualize
 
+
+from train import *
+
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 BATCH_SIZE = 15
 BUFFER_SIZE = 1
@@ -434,14 +437,16 @@ def main():
 
     # Visualizing 3D volumes
     viz = Visualize()
+  
+    for i in range(10):
+      for image, label in train.take(1):
+          gdl = GeneralizedDiceLoss()
+          loss = gdl(label, label)
+          print("dice coeff")
+          print((loss-1)*-1)
 
-    for image, label in train.take(1):
-        print("Image shape: ", image.shape)
-        print("Label: ", label.shape)
-        print(np.nanmax(label.numpy()))
-
-        viz.multi_slice_viewer([image.numpy()[0, :,:,:, 0], label.numpy()[0,:,:,:, 0]])
-        plt.show()
+          #viz.multi_slice_viewer([image.numpy()[0, :,:,:, 0], label.numpy()[0,:,:,:, 0]])
+          #plt.show()
 
 
 if __name__ == "__main__":
