@@ -7,14 +7,14 @@ import nibabel as nib
 from viz import Visualize
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-BATCH_SIZE = 24
-BUFFER_SIZE = 10
+BATCH_SIZE = 15
+BUFFER_SIZE = 1
 MODALITY = 0
 # Right now, the smaller label patch will be centered along the same center point as
 # the image patch. So the label patch will be missing what's left over from the image patch
 # on either side equally.
-IMG_PATCH_SIZE = [24, 128, 128, 3]  # [depth, height, width, channels]
-LABEL_PATCH_SIZE = [24, 128, 128, 1]  # [depth, height, width, channels]
+IMG_PATCH_SIZE = [8, 128, 128, 3]  # [depth, height, width, channels]
+LABEL_PATCH_SIZE = [8, 128, 128, 1]  # [depth, height, width, channels]
 
 # I'm actually guessing at this order... not sure what the order is
 MODALITIES = {"t1": 0, "t1c": 1, "t2": 2, "flair": 3}
@@ -339,7 +339,7 @@ class DataPreprocessor():
         # we have to do this b/c tensorflow does not have a custom .nii.gz image decoder like jpeg or png.
         # According to docs, this lowers performance, but I think this is still better than just doing a for loop b/c of the asynchronous
         dataset = img_ds.map(lambda img_path: self.map_path_to_patch_pair(
-            img_path, purpose="train"), num_parallel_calls=None)
+            img_path, purpose="train"), num_parallel_calls=AUTOTUNE)
         # dataset = img_ds.map(lambda x: tf.py_function(func=self.process_image_train, inp=[x], Tout=(tf.float32, tf.uint8)),
         #        num_parallel_calls=AUTOTUNE)
 
@@ -349,15 +349,16 @@ class DataPreprocessor():
         if cache:
             # If entire dataset does not fit in memory, then specify cache as the name of directory to cache data into
             if isinstance(cache, str):
+                print("Caching on disk...")
                 dataset = dataset.cache(cache)
             # If entire dataset fits in memory, then just cache dataset in memory
             else:
                 dataset = dataset.cache()
 
-        dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
 
         # Select a batch of size BATCH_SIZE
         dataset = dataset.batch(BATCH_SIZE)
+        dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
 
         # Repeat this dataset indefinitely; meaning, we never run out of data to pull from.
         # Since we called shuffle() before, each repetition of the data here will be a differently
